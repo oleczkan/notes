@@ -1,4 +1,5 @@
 import React, { useState, useRef, useReducer, useEffect } from 'react';
+import { View, Text, TextInput, Button, AsyncStorage } from 'react-native';
 
 // Reducer actions
 const ADD_NOTE = 'ADD_NOTE';
@@ -23,10 +24,7 @@ const notesReducer = (state, action) => {
 
 const NotesApp = () => {
   // State for notes
-  const [notes, dispatch] = useReducer(notesReducer, [], () => {
-    const storedNotes = localStorage.getItem('notes');
-    return storedNotes ? JSON.parse(storedNotes) : [];
-  });
+  const [notes, dispatch] = useReducer(notesReducer, []);
 
   // State for title and content of the note being edited
   const [title, setTitle] = useState('');
@@ -35,9 +33,33 @@ const NotesApp = () => {
   // Ref for the text input
   const textInputRef = useRef(null);
 
-  // Use effect to save notes in local storage
+  // Use effect to retrieve notes from AsyncStorage on component mount
   useEffect(() => {
-    localStorage.setItem('notes', JSON.stringify(notes));
+    async function fetchNotes() {
+      try {
+        const storedNotes = await AsyncStorage.getItem('notes');
+        if (storedNotes !== null) {
+          dispatch({ type: 'INIT_NOTES', payload: JSON.parse(storedNotes) });
+        }
+      } catch (error) {
+        console.error('Error retrieving notes: ', error);
+      }
+    }
+
+    fetchNotes();
+  }, []);
+
+  // Use effect to save notes to AsyncStorage whenever notes state changes
+  useEffect(() => {
+    async function saveNotes() {
+      try {
+        await AsyncStorage.setItem('notes', JSON.stringify(notes));
+      } catch (error) {
+        console.error('Error saving notes: ', error);
+      }
+    }
+
+    saveNotes();
   }, [notes]);
 
   // Function to handle adding a note
@@ -60,42 +82,40 @@ const NotesApp = () => {
   };
 
   return (
-    <div>
-      <h1>Notes App</h1>
-      <div>
-        <input
-          type="text"
+    <View>
+      <Text>Notes App</Text>
+      <View>
+        <TextInput
           placeholder="Note Title"
           value={title}
-          onChange={e => setTitle(e.target.value)}
+          onChangeText={text => setTitle(text)}
         />
-        <textarea
+        <TextInput
           placeholder="Note Content"
           value={content}
-          onChange={e => setContent(e.target.value)}
+          onChangeText={text => setContent(text)}
         />
-        <button onClick={addNote}>Add Note</button>
-      </div>
-      <ul>
+        <Button title="Add Note" onPress={addNote} />
+      </View>
+      <View>
         {notes.map((note, index) => (
-          <li key={index}>
-            <h3>{note.title}</h3>
-            <p>{note.content}</p>
-            <button onClick={() => deleteNote(index)}>Delete</button>
-            <button
-              onClick={() => {
+          <View key={index}>
+            <Text>{note.title}</Text>
+            <Text>{note.content}</Text>
+            <Button title="Delete" onPress={() => deleteNote(index)} />
+            <Button
+              title="Edit"
+              onPress={() => {
                 setTitle(note.title);
                 setContent(note.content);
                 textInputRef.current.focus();
                 deleteNote(index);
               }}
-            >
-              Edit
-            </button>
-          </li>
+            />
+          </View>
         ))}
-      </ul>
-    </div>
+      </View>
+    </View>
   );
 };
 
