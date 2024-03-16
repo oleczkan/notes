@@ -1,12 +1,11 @@
 import React, { useState, useRef, useReducer, useEffect } from 'react';
 import { View, Text, TextInput, Button, AsyncStorage } from 'react-native';
 
-// Reducer actions
+
 const ADD_NOTE = 'ADD_NOTE';
 const DELETE_NOTE = 'DELETE_NOTE';
 const EDIT_NOTE = 'EDIT_NOTE';
 
-// Reducer function
 const notesReducer = (state, action) => {
   switch (action.type) {
     case ADD_NOTE:
@@ -23,17 +22,17 @@ const notesReducer = (state, action) => {
 };
 
 const NotesApp = () => {
-  // State for notes
+  
   const [notes, dispatch] = useReducer(notesReducer, []);
 
-  // State for title and content of the note being edited
+  
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  // Ref for the text input
+  
   const textInputRef = useRef(null);
 
-  // Use effect to retrieve notes from AsyncStorage on component mount
+  
   useEffect(() => {
     async function fetchNotes() {
       try {
@@ -49,7 +48,7 @@ const NotesApp = () => {
     fetchNotes();
   }, []);
 
-  // Use effect to save notes to AsyncStorage whenever notes state changes
+  
   useEffect(() => {
     async function saveNotes() {
       try {
@@ -62,7 +61,6 @@ const NotesApp = () => {
     saveNotes();
   }, [notes]);
 
-  // Function to handle adding a note
   const addNote = () => {
     if (title.trim() !== '' || content.trim() !== '') {
       dispatch({ type: ADD_NOTE, payload: { title, content } });
@@ -70,13 +68,12 @@ const NotesApp = () => {
       setContent('');
     }
   };
-
-  // Function to handle deleting a note
+  
   const deleteNote = index => {
     dispatch({ type: DELETE_NOTE, payload: index });
   };
 
-  // Function to handle editing a note
+  
   const editNote = (index, newNote) => {
     dispatch({ type: EDIT_NOTE, payload: { index, note: newNote } });
   };
